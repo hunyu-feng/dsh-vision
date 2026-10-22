@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "DSH Vision",
-    "description": "See images: adds an analyze_image tool backed by Doubao vision models on Volcano Ark (local files or URLs), plus an MCP stdio server."
+    "description": "See images: adds an analyze_image tool that runs on local Ollama by default (free, no key) with an optional Volcano Ark Doubao fallback (local files or URLs), plus an MCP stdio server."
   }
 }
