@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "视觉理解",
+    "description": "让 Agent 看懂图片：通过火山方舟豆包视觉模型新增 analyze_image 工具（支持本地文件与 URL），并附带 MCP stdio 服务。"
+  }
+}

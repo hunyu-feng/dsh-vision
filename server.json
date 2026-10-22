@@ -1,0 +1,42 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.hunyu-feng/dsh-vision",
+  "title": "DSH Vision (Volcano Ark)",
+  "description": "Analyze images (local files or URLs) with Doubao vision models on Volcano Ark, with model fallback.",
+  "repository": {
+    "url": "https://github.com/hunyu-feng/dsh-vision",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "dsh-vision-ark",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "VOLCANO_API_KEY",
+          "description": "Volcano Ark API key used to call the vision models.",
+          "isRequired": true,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "VISION_MODELS",
+          "description": "Comma-separated model ids tried in order, e.g. doubao-seed-2-0-pro-260215,doubao-1-5-vision-pro-32k-250115.",
+          "isRequired": false,
+          "format": "string"
+        },
+        {
+          "name": "ARK_BASE_URL",
+          "description": "Override the Ark OpenAI-compatible base URL (default https://ark.cn-beijing.volces.com/api/v3).",
+          "isRequired": false,
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}

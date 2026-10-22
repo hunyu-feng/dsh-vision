@@ -1,0 +1,68 @@
+{
+  "name": "dsh-vision-ark",
+  "version": "1.0.0",
+  "description": "DSH plugin and MCP server that let agents see images through Volcano Ark (Doubao vision models).",
+  "mcpName": "io.github.hunyu-feng/dsh-vision",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./core": "./lib/vision.js",
+    "./mcp": "./bin/mcp-server.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "bin": {
+    "dsh-vision-ark": "./bin/mcp-server.js",
+    "dsh-vision-mcp": "./bin/mcp-server.js"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "locale/",
+    "index.js",
+    "cordis.patch.yml",
+    "icon.svg",
+    "server.json",
+    "README.md",
+    "LICENSE",
+    "install.sh",
+    "install.ps1"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh-tools": "0.2.1-rc.2",
+    "@modelcontextprotocol/sdk": "^1.32.1"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "mcp",
+    "model-context-protocol",
+    "vision",
+    "image",
+    "doubao",
+    "volcano-ark"
+  ],
+  "license": "MIT",
+  "author": "hunyu-feng",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hunyu-feng/dsh-vision.git"
+  },
+  "homepage": "https://github.com/hunyu-feng/dsh-vision#readme",
+  "bugs": {
+    "url": "https://github.com/hunyu-feng/dsh-vision/issues"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "DSH Vision",
+    "description": "See images: adds an analyze_image tool backed by Doubao vision models on Volcano Ark (local files or URLs), plus an MCP stdio server."
+  }
+}
