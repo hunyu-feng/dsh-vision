@@ -39,10 +39,17 @@ jobs:
           mv server.tmp server.json
           echo "publishing version $VERSION"
 
-      - name: Publish package to npm
-        run: npm publish --access public
+      - name: Publish package to npm (skipped if the version already exists)
+        run: |
+          VER="${VERSION#v}"
+          if npm view "dsh-vision-ark@$VER" version >/dev/null 2>&1; then
+            echo "dsh-vision-ark@$VER is already on npm; skipping publish"
+          else
+            npm publish --access public
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          VERSION: ${{ github.ref_name }}
 
       - name: Install mcp-publisher
         run: |
