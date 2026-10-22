@@ -1,5 +1,7 @@
 # DSH Vision（本地 Ollama 优先 + 火山方舟兜底）
 
+> 本地开发备忘（怎么改、改完怎么生效、踩过的坑）：见 [NOTES.md](./NOTES.md)。
+
 给 DSH Agent（以及任意 MCP 客户端）装上「看图」能力：新增一个 `analyze_image` 工具，把本地图片或图片 URL
 交给视觉模型，返回文字回答。**默认走本机 Ollama，不花钱、不需要账号**；愿意接云端时，火山方舟（豆包）
 作为第二候选自动兜底，任何一项都可以通过配置或环境变量换掉。
@@ -78,7 +80,7 @@ ollama pull qwen2.5vl:3b
 ### 2) DSH / DPH
 
 ```
-安装 dsh-vision-ark 插件，并帮我把本地 Ollama 模型配好
+安装 dsh-vision 插件，并帮我把本地 Ollama 模型配好
 ```
 
 或手动指定仓库/包名安装，然后重启 DSH。重启后 `analyze_image` 直接可用，不需要 Key。
@@ -90,14 +92,14 @@ irm https://raw.githubusercontent.com/hunyu-feng/dsh-vision/main/install.ps1 | i
 curl -fsSL https://raw.githubusercontent.com/hunyu-feng/dsh-vision/main/install.sh | bash  # macOS / Linux
 ```
 
-脚本会检查 Node ≥ 20、提示 Ollama 拉模型、跑一次 `npx -y dsh-vision-ark --selftest`。
+脚本会检查 Node ≥ 20、提示 Ollama 拉模型、跑一次 `npx -y dsh-vision --selftest`。
 
 ### 4) 其它 MCP 客户端
 
 ```json
 {
   "mcpServers": {
-    "dsh-vision": { "command": "npx", "args": ["-y", "dsh-vision-ark"] }
+    "dsh-vision": { "command": "npx", "args": ["-y", "dsh-vision"] }
   }
 }
 ```
@@ -124,7 +126,7 @@ analyze_image  https://example.com/chart.png
 
 | Secret | 用途 |
 | --- | --- |
-| `NPM_TOKEN` | npm 发布 `dsh-vision-ark`（Granular token，Read and write + Publish） |
+| `NPM_TOKEN` | npm 发布 `dsh-vision`（Granular token，Read and write + Publish） |
 | `MCP_GITHUB_TOKEN` | 可选：不用 OIDC、改走 PAT 登录 Registry 时使用（`read:org` 即可） |
 
 不需要自动发版时，本地手动流程：

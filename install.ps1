@@ -1,11 +1,11 @@
-# One-shot setup helper for dsh-vision-ark (Windows).
+# One-shot setup helper for dsh-vision (Windows).
 # Usage: irm https://raw.githubusercontent.com/hunyu-feng/dsh-vision/main/install.ps1 | iex
 $ErrorActionPreference = 'Stop'
 
 function Say($text) { Write-Host $text -ForegroundColor Cyan }
 function Warn($text) { Write-Host $text -ForegroundColor Yellow }
 
-Say 'dsh-vision-ark installer'
+Say 'dsh-vision installer'
 $node = Get-Command node -ErrorAction SilentlyContinue
 if (-not $node) {
   Warn 'Node.js is not installed. Install Node 20+ first: https://nodejs.org'
@@ -38,7 +38,7 @@ if ($env:VOLCANO_API_KEY) {
 $npx = Get-Command npx -ErrorAction SilentlyContinue
 if ($npx) {
   Say 'Self-test (starts the MCP server once and lists the tool):'
-  & npx -y dsh-vision-ark --selftest
+  & npx -y dsh-vision --selftest
   if ($LASTEXITCODE -ne 0) { Warn 'self-test did not complete; check network access to the npm registry' }
 }
 
@@ -52,7 +52,7 @@ Next steps
    # optional: a second model to try if the first is missing
    # ollama pull moondream
 
-2) DSH: open the Plugins page (or ask the DSH agent: "安装 dsh-vision-ark 插件") and install
+2) DSH: open the Plugins page (or ask the DSH agent: "安装 dsh-vision 插件") and install
    the bundle from npm or this repository. Restart DSH once. The analyze_image tool then appears.
    Settings live in %USERPROFILE%\.dsh-vision\config.json (optional):
    {
@@ -67,11 +67,11 @@ Next steps
    {
      "dsh-vision": {
        "command": "npx",
-       "args": ["-y", "dsh-vision-ark"]
+       "args": ["-y", "dsh-vision"]
      }
    }
 
-4) Cursor / other MCP clients: command `npx -y dsh-vision-ark`; optional env VISION_MODELS,
+4) Cursor / other MCP clients: command `npx -y dsh-vision`; optional env VISION_MODELS,
    VISION_PROVIDER, OLLAMA_BASE_URL, VOLCANO_API_KEY.
 
 5) Try it: ask the agent "analyze_image ./screenshot.png 这张图里有什么报错？"

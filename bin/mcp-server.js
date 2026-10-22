@@ -3,8 +3,8 @@
  * MCP stdio server exposing the same `analyze_image` tool to any MCP client
  * (Claude Desktop, Cursor, DSH's own MCP client, ...).
  *
- * Run:  npx -y dsh-vision-ark        (local Ollama, no key)
- *       VOLCANO_API_KEY=... npx -y dsh-vision-ark   (Volcano Ark fallback)
+ * Run:  npx -y dsh-vision        (local Ollama, no key)
+ *       VOLCANO_API_KEY=... npx -y dsh-vision   (Volcano Ark fallback)
  */
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';

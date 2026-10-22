@@ -1,5 +1,5 @@
 {
-  "name": "dsh-vision-ark",
+  "name": "dsh-vision",
   "version": "1.0.0",
   "description": "DSH plugin and MCP server that let agents see images through Volcano Ark (Doubao vision models).",
   "mcpName": "io.github.hunyu-feng/dsh-vision",
@@ -13,7 +13,7 @@
     "./icon": "./icon.svg"
   },
   "bin": {
-    "dsh-vision-ark": "./bin/mcp-server.js",
+    "dsh-vision": "./bin/mcp-server.js",
     "dsh-vision-mcp": "./bin/mcp-server.js"
   },
   "files": [

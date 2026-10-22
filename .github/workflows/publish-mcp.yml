@@ -42,8 +42,8 @@ jobs:
       - name: Publish package to npm (skipped if the version already exists)
         run: |
           VER="${VERSION#v}"
-          if npm view "dsh-vision-ark@$VER" version >/dev/null 2>&1; then
-            echo "dsh-vision-ark@$VER is already on npm; skipping publish"
+          if npm view "dsh-vision@$VER" version >/dev/null 2>&1; then
+            echo "dsh-vision@$VER is already on npm; skipping publish"
           else
             npm publish --access public
           fi

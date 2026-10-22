@@ -3,6 +3,9 @@
  *
  * The tool is fiber-scoped: when this plugin is disabled or removed, the
  * registry tears the tool down with the plugin, so apply() has no cleanup code.
+ *
+ * Local development notes (reload rules, env vars, MCP server): see NOTES.md in
+ * the package root.
  */
 import { defineTool } from '@deepseek-ai/dsh-tools';
 
