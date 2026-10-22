@@ -36,6 +36,7 @@ const analyzeImageTool = defineTool({
       properties: {
         text: { type: 'string' },
         model: { type: 'string' },
+        provider: { type: 'string' },
       },
       additionalProperties: false,
     },
@@ -46,7 +47,7 @@ const analyzeImageTool = defineTool({
   timeoutMs: 180_000,
   async execute(args, exec) {
     const result = await analyzeImage({ image: args.image, prompt: args.prompt, signal: exec?.signal });
-    return { text: result.text, model: result.model };
+    return { text: result.text, model: result.model, provider: result.provider };
   },
 });
 

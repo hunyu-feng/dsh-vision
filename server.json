@@ -1,8 +1,8 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.hunyu-feng/dsh-vision",
-  "title": "DSH Vision (Volcano Ark)",
-  "description": "Analyze images (local files or URLs) with Doubao vision models on Volcano Ark, with model fallback.",
+  "title": "DSH Vision (local Ollama first, Volcano Ark fallback)",
+  "description": "analyze_image for agents: local Ollama vision by default, Volcano Ark Doubao as fallback.",
   "repository": {
     "url": "https://github.com/hunyu-feng/dsh-vision",
     "source": "github"
@@ -18,21 +18,39 @@
       },
       "environmentVariables": [
         {
-          "name": "VOLCANO_API_KEY",
-          "description": "Volcano Ark API key used to call the vision models.",
-          "isRequired": true,
-          "isSecret": true,
-          "format": "string"
-        },
-        {
           "name": "VISION_MODELS",
-          "description": "Comma-separated model ids tried in order, e.g. doubao-seed-2-0-pro-260215,doubao-1-5-vision-pro-32k-250115.",
+          "description": "Comma-separated chain like `ollama:qwen2.5vl:3b,ark:doubao-seed-2-0-pro-260215`. Defaults to the local model then Ark.",
           "isRequired": false,
           "format": "string"
         },
         {
+          "name": "VISION_PROVIDER",
+          "description": "Provider used for bare model ids and by default: ollama, ark or openai. Defaults to ollama.",
+          "isRequired": false,
+          "format": "string"
+        },
+        {
+          "name": "OLLAMA_BASE_URL",
+          "description": "Local Ollama OpenAI-compatible base URL. Defaults to http://127.0.0.1:11434/v1.",
+          "isRequired": false,
+          "format": "string"
+        },
+        {
+          "name": "VOLCANO_API_KEY",
+          "description": "Volcano Ark API key; only needed when an `ark:` model is in the chain.",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
           "name": "ARK_BASE_URL",
-          "description": "Override the Ark OpenAI-compatible base URL (default https://ark.cn-beijing.volces.com/api/v3).",
+          "description": "Override the Volcano Ark base URL. Defaults to https://ark.cn-beijing.volces.com/api/v3.",
+          "isRequired": false,
+          "format": "string"
+        },
+        {
+          "name": "DSH_VISION_HOME",
+          "description": "Directory holding the optional config.json settings file. Defaults to ~/.dsh-vision.",
           "isRequired": false,
           "format": "string"
         }

@@ -9,7 +9,7 @@ const SERVER = fileURLToPath(new URL('../bin/mcp-server.js', import.meta.url));
 function startServer(env = {}) {
   const child = spawn(process.execPath, [SERVER], {
     stdio: ['pipe', 'pipe', 'pipe'],
-    env: { ...process.env, VOLCANO_API_KEY: '', ...env },
+    env: { ...process.env, VOLCANO_API_KEY: '', VISION_MODELS: 'ark:doubao-seed-2-0-pro-260215', ...env },
   });
   let buffer = '';
   const pending = new Map();
@@ -83,12 +83,12 @@ describe('mcp stdio server', () => {
     assert.equal(tool.inputSchema.properties.prompt.type, 'string');
   });
 
-  it('returns an actionable tool error when the API key is missing', async () => {
+  it('returns an actionable tool error when no provider is configured', async () => {
     const result = await server.call('tools/call', {
       name: 'analyze_image',
       arguments: { image: 'https://example.com/cat.png' },
     });
     assert.equal(result.isError, true);
-    assert.match(result.content[0].text, /VOLCANO_API_KEY/);
+    assert.match(result.content[0].text, /Ollama|VOLCANO_API_KEY/);
   });
 });

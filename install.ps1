@@ -17,12 +17,22 @@ if ($major -lt 20) {
   exit 1
 }
 
-if (-not $env:VOLCANO_API_KEY) {
-  Warn 'VOLCANO_API_KEY is not set.'
-  Warn 'Create a key at https://console.volcengine.com/ark (火山方舟), then set it:'
-  Warn '  $env:VOLCANO_API_KEY = "your-key"    # or setx VOLCANO_API_KEY "your-key"'
+# Local mode works without any account or API key; Ark is the optional fallback.
+$ollama = Get-Command ollama -ErrorAction SilentlyContinue
+if ($ollama) {
+  Say 'Ollama detected. Make sure the local vision model is pulled:'
+  Write-Host '  ollama pull qwen2.5vl:3b'
 } else {
-  Say 'VOLCANO_API_KEY detected.'
+  Warn 'Ollama not found. Local (free) vision needs it:'
+  Warn '  winget install --id Ollama.Ollama'
+  Warn '  ollama pull qwen2.5vl:3b'
+  Warn 'The plugin still works if you set VOLCANO_API_KEY for a cloud fallback instead.'
+}
+
+if ($env:VOLCANO_API_KEY) {
+  Say 'VOLCANO_API_KEY detected; Ark models can be used as fallback.'
+} else {
+  Write-Host 'VOLCANO_API_KEY not set (optional). Cloud fallback is skipped, the local model is used.'
 }
 
 $npx = Get-Command npx -ErrorAction SilentlyContinue
@@ -36,20 +46,33 @@ if ($npx) {
 
 Next steps
 ----------
-1) DSH: open the Plugins page (or ask the DSH agent: "安装 dsh-vision-ark 插件") and install
-   the bundle from npm or this repository. Restart DSH once. The analyze_image tool then appears.
+1) Ollama (local, free):
+   winget install --id Ollama.Ollama
+   ollama pull qwen2.5vl:3b
+   # optional: a second model to try if the first is missing
+   # ollama pull moondream
 
-2) Claude Desktop: add this to claude_desktop_config.json under "mcpServers":
+2) DSH: open the Plugins page (or ask the DSH agent: "安装 dsh-vision-ark 插件") and install
+   the bundle from npm or this repository. Restart DSH once. The analyze_image tool then appears.
+   Settings live in %USERPROFILE%\.dsh-vision\config.json (optional):
+   {
+     "provider": "ollama",
+     "models": "ollama:qwen2.5vl:3b,ark:doubao-seed-2-0-pro-260215",
+     "baseUrls": { "ollama": "http://127.0.0.1:11434/v1" },
+     "apiKeys": { "ark": "" },
+     "timeoutMs": 60000
+   }
+
+3) Claude Desktop: add this to claude_desktop_config.json under "mcpServers":
    {
      "dsh-vision": {
        "command": "npx",
-       "args": ["-y", "dsh-vision-ark"],
-       "env": { "VOLCANO_API_KEY": "your-key" }
+       "args": ["-y", "dsh-vision-ark"]
      }
    }
 
-3) Cursor / other MCP clients: command `npx -y dsh-vision-ark`, env VOLCANO_API_KEY (required),
-   optional VISION_MODELS (comma separated, tried in order).
+4) Cursor / other MCP clients: command `npx -y dsh-vision-ark`; optional env VISION_MODELS,
+   VISION_PROVIDER, OLLAMA_BASE_URL, VOLCANO_API_KEY.
 
-4) Try it: ask the agent "analyze_image ./screenshot.png 这张图里有什么报错？"
+5) Try it: ask the agent "analyze_image ./screenshot.png 这张图里有什么报错？"
 '@ | Write-Host

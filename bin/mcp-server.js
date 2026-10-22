@@ -3,7 +3,8 @@
  * MCP stdio server exposing the same `analyze_image` tool to any MCP client
  * (Claude Desktop, Cursor, DSH's own MCP client, ...).
  *
- * Run:  VOLCANO_API_KEY=... npx -y dsh-vision-ark
+ * Run:  npx -y dsh-vision-ark        (local Ollama, no key)
+ *       VOLCANO_API_KEY=... npx -y dsh-vision-ark   (Volcano Ark fallback)
  */
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
@@ -32,8 +33,9 @@ if (process.argv.includes('--selftest')) {
       ok: true,
       server: 'dsh-vision',
       tool: TOOL_NAME,
-      models: chain.map((entry) => entry.model),
+      models: chain.map((entry) => `${entry.provider}:${entry.model}`),
       apiKeyConfigured: Boolean(process.env.VOLCANO_API_KEY ?? process.env.ARK_API_KEY),
+      ollamaBaseUrl: process.env.OLLAMA_BASE_URL ?? 'http://127.0.0.1:11434/v1',
     }),
   );
   process.exit(0);
@@ -68,7 +70,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       prompt: /** @type {string | undefined} */ (args?.prompt),
     });
     return {
-      content: [{ type: 'text', text: result.text }],
+      content: [{ type: 'text', text: `[${result.provider}/${result.model}]
+${result.text}` }],
     };
   } catch (error) {
     return {

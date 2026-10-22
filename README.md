@@ -1,7 +1,8 @@
-# DSH Vision（火山方舟豆包视觉）
+# DSH Vision（本地 Ollama 优先 + 火山方舟兜底）
 
 给 DSH Agent（以及任意 MCP 客户端）装上「看图」能力：新增一个 `analyze_image` 工具，把本地图片或图片 URL
-交给火山方舟（Volcano Ark）的豆包视觉模型，返回文字回答。支持多模型按序兜底、超时与鉴权分类处理。
+交给视觉模型，返回文字回答。**默认走本机 Ollama，不花钱、不需要账号**；愿意接云端时，火山方舟（豆包）
+作为第二候选自动兜底，任何一项都可以通过配置或环境变量换掉。
 
 同一个包同时提供两种形态：
 
@@ -15,134 +16,140 @@
 - `analyze_image({ image, prompt? })`
   - `image`：本机绝对路径（png / jpeg / webp / gif / bmp，≤ 20 MB）或 `http(s)` URL，必填。
   - `prompt`：针对图片的提问，可选；省略时给出详细描述。
-- 默认模型 `doubao-seed-2-0-pro-260215`，通过方舟 OpenAI 兼容接口
-  `https://ark.cn-beijing.volces.com/api/v3/chat/completions` 调用。
-- `VISION_MODELS` 逗号分隔模型列表，按序尝试；遇到 `429`、`404`、`408`、`409`、`425`、`5xx`、超时、
-  网络错误自动切下一个；`401/403` 直接放弃该 provider 剩余候选并报鉴权错误；其他 `4xx`（如 400 参数错）
-  立即失败，不浪费 token。
+- 默认候选链：`ollama:qwen2.5vl:3b` → `ark:doubao-seed-2-0-pro-260215`。
+  - 本地模型需要先 `ollama pull qwen2.5vl:3b`；没装 Ollama 时该候选网络失败，会自动切下一个。
+  - `ark:` 候选只有配置了 Key 才会被尝试；没配 Key 直接跳过，不会报错（这就是「零花费」的意思）。
+- 失败分类：
+  - `429`、`404`、`408`、`409`、`425`、`5xx`、超时、网络错误 → 切下一个候选；
+  - `401/403` → 放弃该 provider 剩余候选（Key 无效就没必要重试）；
+  - 其它 `4xx`（如 400 参数错）→ 立即失败，不浪费 token。
 - 本地图片自动嗅探 MIME 并转成 base64 data URL；URL 原样透传，不额外下载。
 
 ## 环境变量
 
 | 变量 | 必填 | 说明 |
 | --- | --- | --- |
-| `VOLCANO_API_KEY` | 是 | 火山方舟 API Key（也可用 `ARK_API_KEY`）。不要写进代码。 |
-| `VISION_MODELS` | 否 | 逗号分隔的模型 id，按序兜底；可用 `ark:` 前缀显式标注 provider，如 `ark:doubao-seed-2-0-pro-260215,doubao-1-5-vision-pro-32k-250115`。 |
-| `ARK_BASE_URL` | 否 | 覆盖方舟 OpenAI 兼容 base URL（默认 `https://ark.cn-beijing.volces.com/api/v3`）。 |
+| `VISION_MODELS` | 否 | 逗号分隔候选链，可带 provider 前缀：`ollama:qwen2.5vl:3b,ark:doubao-seed-2-0-pro-260215`。默认就是这一串。 |
+| `VISION_PROVIDER` | 否 | 不带前缀的模型 id 归到哪个 provider：`ollama`（默认）/ `ark` / `openai`。 |
+| `OLLAMA_BASE_URL` | 否 | 本地 Ollama 的 OpenAI 兼容地址，默认 `http://127.0.0.1:11434/v1`。 |
+| `VOLCANO_API_KEY` | 否 | 火山方舟 Key（也可用 `ARK_API_KEY`）。只有配置了 `ark:` 候选时才需要。 |
+| `ARK_BASE_URL` | 否 | 火山方舟 base URL，默认 `https://ark.cn-beijing.volces.com/api/v3`。 |
+| `VISION_BASE_URL` / `VISION_API_KEY` | 否 | 接任意 OpenAI 兼容服务时用（provider 名 `openai`）。 |
+| `VISION_TIMEOUT_MS` | 否 | 单次请求超时，默认 60000。 |
+| `DSH_VISION_HOME` | 否 | 设置文件目录，默认 `~/.dsh-vision`。 |
+
+## 设置文件（接入位置）
+
+不想动环境变量时，把配置写到 `~/.dsh-vision/config.json`（Windows：`%USERPROFILE%\.dsh-vision\config.json`）。
+环境变量优先级更高，设置文件只做默认值：
+
+```json
+{
+  "provider": "ollama",
+  "models": "ollama:qwen2.5vl:3b,ark:doubao-seed-2-0-pro-260215",
+  "baseUrls": { "ollama": "http://127.0.0.1:11434/v1", "ark": "https://ark.cn-beijing.volces.com/api/v3" },
+  "apiKeys": { "ark": "" },
+  "timeoutMs": 60000
+}
+```
+
+- 换本地模型：把 `models` 改成 `ollama:moondream` 之类，并 `ollama pull moondream`。
+- 接云端：填 `apiKeys.ark`，或设置 `VOLCANO_API_KEY`，`ark:` 候选就会生效。
+- 接公司内网 / 自建 OpenAI 兼容服务：`"provider": "openai"`，配 `baseUrls.openai` 与 `apiKeys.openai`。
 
 ## 安装
 
-### 1) DSH / DPH
+### 1) 本地视觉模型（免费）
 
-在 DSH 里让 Agent 安装（推荐）：
+Windows：
+
+```powershell
+winget install --id Ollama.Ollama
+ollama pull qwen2.5vl:3b
+```
+
+macOS / Linux：
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+ollama pull qwen2.5vl:3b
+```
+
+### 2) DSH / DPH
 
 ```
-安装 dsh-vision-ark 插件，并帮我把 VOLCANO_API_KEY 配好
+安装 dsh-vision-ark 插件，并帮我把本地 Ollama 模型配好
 ```
 
-或打开 **插件** 页面，从 npm / 本仓库安装 `dsh-vision-ark`，重启 DSH。插件启用后 `analyze_image`
-会出现在工具列表里，卸载插件时工具随之注销（`ctx.tools.register` 是 fiber 级作用域）。
+或手动指定仓库/包名安装，然后重启 DSH。重启后 `analyze_image` 直接可用，不需要 Key。
 
-### 2) Claude Desktop / Cursor / 其他 MCP 客户端
+### 3) 一键脚本
+
+```powershell
+irm https://raw.githubusercontent.com/hunyu-feng/dsh-vision/main/install.ps1 | iex   # Windows
+curl -fsSL https://raw.githubusercontent.com/hunyu-feng/dsh-vision/main/install.sh | bash  # macOS / Linux
+```
+
+脚本会检查 Node ≥ 20、提示 Ollama 拉模型、跑一次 `npx -y dsh-vision-ark --selftest`。
+
+### 4) 其它 MCP 客户端
 
 ```json
 {
   "mcpServers": {
-    "dsh-vision": {
-      "command": "npx",
-      "args": ["-y", "dsh-vision-ark"],
-      "env": {
-        "VOLCANO_API_KEY": "your-key",
-        "VISION_MODELS": "doubao-seed-2-0-pro-260215"
-      }
-    }
+    "dsh-vision": { "command": "npx", "args": ["-y", "dsh-vision-ark"] }
   }
 }
 ```
 
-### 3) 一键安装脚本
-
-```bash
-# macOS / Linux
-curl -fsSL https://raw.githubusercontent.com/hunyu-feng/dsh-vision/main/install.sh | bash
-```
-
-```powershell
-# Windows
-irm https://raw.githubusercontent.com/hunyu-feng/dsh-vision/main/install.ps1 | iex
-```
-
-脚本会检查 Node ≥ 20、提示 `VOLCANO_API_KEY`、运行 `npx -y dsh-vision-ark --selftest` 自检，
-并打印各客户端的配置片段。
-
-### 4) 自检
-
-```bash
-npx -y dsh-vision-ark --selftest
-# {"ok":true,"server":"dsh-vision","tool":"analyze_image","models":["doubao-seed-2-0-pro-260215"],"apiKeyConfigured":true}
-```
+需要云端兜底时再补 `"env": { "VOLCANO_API_KEY": "..." }`。
 
 ## 使用示例
 
-```text
-analyze_image image=C:\Users\me\Pictures\error.png prompt="这个报错是什么意思？"
-analyze_image image=https://example.com/chart.png prompt="把这张图里的表格转成 Markdown"
+```
+analyze_image  D:\pictures\error.png  提示词：这张截图里报了什么错？
+analyze_image  ./design.png           提示词：把界面里的字段名全部抄下来
+analyze_image  https://example.com/chart.png
 ```
 
-模型可见的参数 Schema（`defineTool` 声明，自动生成校验器）：
+返回根值是 `{ text, model, provider }`；DSH 里只渲染 `text`。
 
-```json
-{
-  "image": { "type": "string", "required": true },
-  "prompt": { "type": "string" }
-}
-```
+## 发布（维护者）
 
-工具返回值（`output.schema` 声明的 canonical 值）：`{ "text": "…", "model": "doubao-…" }`。
+打 `v*` tag 触发 `.github/workflows/publish-mcp.yml`：
 
-## 开发与测试
-
-```bash
-npm install
-npm test        # node --test：本地文件、URL、429/5xx 兜底、401 中止、缺 Key、MCP 协议握手
-```
-
-测试用假 `fetch`，不会真的调用方舟，也不需要 API Key。
-
-## 发布（打 tag 即自动发版）
-
-`.github/workflows/publish-mcp.yml` 在推送 `v*` tag 时执行：安装依赖 → 跑测试 → 把 tag 版本同步进
-`package.json` 与 `server.json` → `npm publish` → 下载 `mcp-publisher` → `mcp-publisher login github-oidc`
-→ `mcp-publisher validate` → `mcp-publisher publish`。
-
-需要在仓库 Settings → Secrets 配置：
+1. `npm publish`（需要仓库 Secret `NPM_TOKEN`）；
+2. 下载 `mcp-publisher`，用 GitHub OIDC 登录 MCP Registry；
+3. `mcp-publisher publish` 把 `server.json` 登记到官方 Registry。
 
 | Secret | 用途 |
 | --- | --- |
-| `NPM_TOKEN` | npm 自动化发布令牌（Granular token，Package: read and write）。 |
-| `MCP_GITHUB_TOKEN` | 可选，仅用 PAT 登录注册表时需要；`read:org` 即可，**不要**给仓库权限。 |
+| `NPM_TOKEN` | npm 发布 `dsh-vision-ark`（Granular token，Read and write + Publish） |
+| `MCP_GITHUB_TOKEN` | 可选：不用 OIDC、改走 PAT 登录 Registry 时使用（`read:org` 即可） |
 
-`package.json` 的 `mcpName` 必须与 `server.json` 的 `name` 一致（本例 `io.github.hunyu-feng/dsh-vision`），
-否则注册表校验会拒绝发布。仓库还需打上 `mcp-server` / `dsh-plugin` 话题便于发现。
+不需要自动发版时，本地手动流程：
 
-## 目录结构
+```bash
+npm publish
+curl -fsSL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" | tar xz
+./mcp-publisher login github --token "$(gh auth token)"
+./mcp-publisher validate server.json && ./mcp-publisher publish
+```
+
+## 项目结构
 
 ```
-index.js                 DSH 原生插件入口（defineTool 注册 analyze_image）
-lib/vision.js            核心：图片解析、方舟调用、模型兜底
-bin/mcp-server.js        MCP stdio 服务（--selftest 自检）
+index.js                 DSH 插件入口：defineTool + ctx.tools.register
+lib/vision.js            核心：provider 解析、图片编码、候选链、失败分类
+bin/mcp-server.js        MCP stdio 服务（复用 lib/vision.js）
+cordis.patch.yml         DSH bundle 安装补丁
+locale/{zh,en}.json      插件在 DSH 里的标题/描述
 server.json              MCP Registry 元数据
-cordis.patch.yml         DSH bundle patch
-locale/{en,zh}.json      插件标题与描述
-test/                    node --test 用例（含 MCP 握手）
-.github/workflows/       打 tag 自动发布
+install.ps1 / install.sh 一键安装脚本
+test/                    node --test 用例（本地/URL/兜底/鉴权/设置文件）
 ```
 
 ## 隐私
 
-图片只发往你配置的方舟接口（默认 `ark.cn-beijing.volces.com`），插件本身不落盘、不上传别处。
-API Key 只从进程环境读取。
-
-## License
-
-MIT
+- 本地模式：图片只发给本机 `127.0.0.1:11434`，不出网。
+- 云端模式：图片会发给火山方舟；Key 只从环境变量或设置文件读取，不写进日志。
